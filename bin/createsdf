@@ -13,6 +13,7 @@ function usage() {
     console.warn('Usage: %s [args] [font file]...', path.relative(process.cwd(), process.argv[1]));
     console.warn('  --min [chr]\t Minimum char code to generate');
     console.warn('  --max [chr]\t Minimum char code to generate');
+    console.warn('  --workers [count]\t Number of concurrent worders');
     process.exit(1);
 }
 
@@ -22,6 +23,7 @@ var cutoff = 2/8;
 
 var minchr = +(argv.min || 0);
 var maxchr = +(argv.max || 65535);
+var workers = +(argv.workers || require('os').cpus().length);
 
 var from = minchr - minchr % 256;
 
@@ -32,8 +34,7 @@ if (!fonts.length) {
 
 if (cluster.isMaster) {
     // Fork workers.
-    var numCPUs = require('os').cpus().length;
-    for (var i = 0; i < numCPUs; i++) {
+    for (var i = 0; i < workers; i++) {
         cluster.fork().on('message', function(msg) {
             if (msg.type === 'work') {
                 if (from < maxchr) {
