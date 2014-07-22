@@ -61,7 +61,8 @@ if (cluster.isMaster) {
     });
 
     var basename = fonts.map(function(font) {
-        return font.tables.name.fontFamily + ' ' + font.tables.name.fontSubfamily;
+        return (font.tables.name.preferredFamily || font.tables.name.fontFamily) + ' ' +
+               (font.tables.name.preferredSubfamily || font.tables.name.fontSubfamily);
     }).join(', ');
 
     try {
