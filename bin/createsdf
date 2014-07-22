@@ -110,7 +110,7 @@ function createGlyphs(from, to, callback) {
                 glyph_pbf.writeTaggedVarint(/* width */ 3, info.glyphWidth);
                 glyph_pbf.writeTaggedVarint(/* height */ 4, info.glyphHeight);
                 glyph_pbf.writeTaggedSVarint(/* left */ 5, info.glyphBearingX);
-                glyph_pbf.writeTaggedSVarint(/* top */ 6, info.glyphBearingY);
+                glyph_pbf.writeTaggedSVarint(/* top */ 6, info.glyphTop);
                 glyph_pbf.writeTaggedVarint(/* advance */ 7, info.glyphAdvance);
 
                 fontstack_pbf.writeMessage(/* glyphs */ 3, glyph_pbf);
