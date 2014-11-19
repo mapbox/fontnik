@@ -4,7 +4,7 @@
   "description": "Creates signed distance fields out of OpenType/TrueType fonts",
   "author": "Konstantin Käfer <mail@kkaefer.com>",
   "license": "BSD-2-Clause",
-  "main": "lib/index.js",
+  "main": "lib/sdf.js",
   "dependencies": {
     "opentype.js": "git+https://github.com/nodebox/opentype.js.git",
     "pbf": "git+https://github.com/mapbox/pbf.git",
