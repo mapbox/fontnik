@@ -6,7 +6,7 @@ var zlib = require('zlib');
 var argv = require('minimist')(process.argv.slice(2));
 var opentype = require('opentype.js');
 var Protobuf = require('pbf');
-var sdf = require('../lib/sdf');
+var sdf = require('../lib/sdf').glyphToSDF;
 
 
 function usage() {
