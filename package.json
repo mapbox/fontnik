@@ -1,5 +1,5 @@
 {
-  "name": "fontnik",
+  "name": "@mapbox/fontnik",
   "version": "0.0.0",
   "description": "Creates signed distance fields out of OpenType/TrueType fonts",
   "author": "Konstantin Käfer <mail@kkaefer.com>",
