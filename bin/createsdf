@@ -6,6 +6,8 @@ var zlib = require('zlib');
 var argv = require('minimist')(process.argv.slice(2));
 var opentype = require('opentype.js');
 var Protobuf = require('pbf');
+
+var glyphsPbfIO = require('../lib/glyphs_pbf')
 var sdf = require('../lib/sdf').glyphToSDF;
 
 
@@ -62,8 +64,8 @@ if (cluster.isMaster) {
     });
 
     var basename = fonts.map(function(font) {
-        return (font.tables.name.preferredFamily || font.tables.name.fontFamily) + ' ' +
-               (font.tables.name.preferredSubfamily || font.tables.name.fontSubfamily);
+        return (font.tables.name.preferredFamily.en || font.tables.name.fontFamily.en) + ' ' +
+               (font.tables.name.preferredSubfamily.en || font.tables.name.fontSubfamily.en);
     }).join(', ');
 
     try {
@@ -88,41 +90,41 @@ if (cluster.isMaster) {
 }
 
 
+
 function createGlyphs(from, to, callback) {
     var out = path.join(basename, from + '-' + to + '.pbf');
     console.warn('Generating ' + out);
 
-    var fontstack_pbf = new Protobuf(new Buffer(16384));
-    fontstack_pbf.writeTaggedString(/* name */ 1, basename);
-    fontstack_pbf.writeTaggedString(/* range */ 2, from + '-' + to);
+    var fontstack = {
+        name: basename,
+        range: from + '-' + to,
+        glyphs: [],
+    }
 
     for (var chr = from; chr <= to; chr++) {
         for (var i = 0; i < fonts.length; i++) {
             var font = fonts[i];
             var glyph = font.charToGlyph(String.fromCharCode(chr));
             if (glyph.index > 0) {
-                var info = sdf(glyph, fontSize, buffer, cutoff);
-                var glyph_pbf = new Protobuf(new Buffer(512));
-                glyph_pbf.writeTaggedVarint(/* id */ 1, chr);
-                if (info.data) {
-                    glyph_pbf.writeTaggedBuffer(/* bitmap */ 2, new Buffer(info.data));
-                }
-                glyph_pbf.writeTaggedVarint(/* width */ 3, info.glyphWidth);
-                glyph_pbf.writeTaggedVarint(/* height */ 4, info.glyphHeight);
-                glyph_pbf.writeTaggedSVarint(/* left */ 5, info.glyphBearingX);
-                glyph_pbf.writeTaggedSVarint(/* top */ 6, info.glyphTop);
-                glyph_pbf.writeTaggedVarint(/* advance */ 7, info.glyphAdvance);
+                var info = sdf(glyph, fontSize, buffer, cutoff, font);
 
-                fontstack_pbf.writeMessage(/* glyphs */ 3, glyph_pbf);
+                fontstack.glyphs.push({
+                    id: chr,
+                    bitmap: info.data && new Buffer(info.data),
+                    width: info.glyphWidth,
+                    height: info.glyphHeight,
+                    left: info.glyphBearingX,
+                    top: info.glyphTop,
+                    advance: info.glyphAdvance
+                })
                 break;
             }
         }
     }
+    var glyphsBuffer = new Protobuf();
+    glyphsPbfIO.glyphs.write({ stacks: [fontstack] }, glyphsBuffer);
 
-    var glyphs_pbf = new Protobuf(new Buffer(fontstack_pbf.pos + 8));
-    glyphs_pbf.writeMessage(/* stacks */ 1, fontstack_pbf);
-
-    zlib.deflate(glyphs_pbf.finish(), function(err, data) {
+    zlib.deflate(glyphsBuffer.finish(), function(err, data) {
         if (err) console.warn(err.stack);
         fs.writeFile(out, data, function(err) {
             if (err) console.warn(err.stack);
